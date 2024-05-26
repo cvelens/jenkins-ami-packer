@@ -17,6 +17,9 @@ jobs:
 
     - name: Download Packer plugin libraries
       run: packer init ami.pkr.hcl
+    
+    - name: Packet FMT
+      run: packer fmt ami.pkr.hcl
 
     - name: Packer template validation
       run: packer validate ami.pkr.hcl
