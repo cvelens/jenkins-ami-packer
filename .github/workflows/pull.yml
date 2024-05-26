@@ -1,4 +1,4 @@
-name: Pull
+name: Validate Packer
 
 on:
   workflow_dispatch:
