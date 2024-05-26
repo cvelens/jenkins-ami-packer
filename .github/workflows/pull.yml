@@ -1,4 +1,4 @@
-name: Validate Packer Before Merging
+name: Validate Packer Before Merge
 
 on:
   workflow_dispatch:
