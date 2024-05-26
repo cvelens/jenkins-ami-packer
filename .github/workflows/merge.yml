@@ -15,7 +15,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Setting up Hashicorp Packer
-      uses: hashicorp-contrib/setup-packer@main
+      uses: hashicorp-contrib/setup-packer@v3
       with:
         packer-version: 1.10.3
 
