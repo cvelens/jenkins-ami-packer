@@ -1,4 +1,3 @@
-
 name: Building AMI on Merge with Main
 
 env:
