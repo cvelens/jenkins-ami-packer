@@ -53,7 +53,7 @@ The AMI creation process involves the following steps:
 
 The repository includes two GitHub Actions workflows:
 
-1. `merge.yml`: Triggered when changes are pushed to the main branch. It builds the AMI using Packer.
+1. `merge.yml`: Triggered when changes are pushed to the main branch. It builds the AMI using Packer build command and pushes the latest AMI to AWS.
 2. `pull.yml`: Triggered when a pull request is created against the main branch. It validates the Packer configuration.
 
 ## Usage
