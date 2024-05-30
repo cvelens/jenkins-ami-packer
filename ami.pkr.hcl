@@ -104,6 +104,11 @@ build {
     destination = "/home/ubuntu/certbot_renewal.sh"
   }
 
+  provisioner "file" {
+    source      = "plugins.txt"
+    destination = "/home/ubuntu/plugins.txt"
+  }
+
   provisioner "shell" {
     environment_vars = [
       "CHECKPOINT_DISABLE=1"
