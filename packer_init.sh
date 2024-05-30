@@ -18,6 +18,22 @@ sudo systemctl enable jenkins
 sudo systemctl start jenkins
 sudo systemctl status jenkins
 
+# Wait for Jenkins
+while [ "$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080)" != "403" ]; do
+    echo "Waiting for Jenkins to start..."
+    sleep 5
+done
+
+# Install Jenkins plugins
+JENKINS_CLI_CMD="java -jar /tmp/jenkins-cli.jar -s http://localhost:8080/ -auth admin:$(cat /var/lib/jenkins/secrets/initialAdminPassword)"
+wget http://localhost:8080/jnlpJars/jenkins-cli.jar -O /tmp/jenkins-cli.jar
+while IFS= read -r plugin || [[ -n "$plugin" ]]; do
+    $JENKINS_CLI_CMD install-plugin "$plugin"
+done < /home/ubuntu/plugins.txt
+
+# Restart Jenkins 
+sudo systemctl restart jenkins
+
 # Install certbot for Let's Encrypt
 sudo add-apt-repository -y ppa:certbot/certbot
 sudo apt-get update
