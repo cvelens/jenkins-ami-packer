@@ -106,7 +106,7 @@ build {
 
   provisioner "file" {
     source      = "plugins.txt"
-    destination = "/home/ubuntu/plugins.txt"
+    destination = "/tmp/plugins.txt"
   }
 
   provisioner "shell" {

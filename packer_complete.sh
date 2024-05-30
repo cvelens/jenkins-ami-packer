@@ -7,6 +7,25 @@ sudo mv /home/ubuntu/certbot_renewal.sh /usr/local/bin/certbot_renewal.sh
 sudo chmod 755 /usr/local/bin/certbot_initial.sh
 sudo chmod 755 /usr/local/bin/certbot_renewal.sh
 
+# Wait for Jenkins
+while [ "$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080)" != "403" ]; do
+    echo "Waiting for Jenkins to start..."
+    sleep 5
+done
+
+# Jenkins CLI
+sudo wget http://localhost:8080/jnlpJars/jenkins-cli.jar -O /tmp/jenkins-cli.jar
+
+# Install Jenkins plugins
+JENKINS_CLI_CMD="sudo java -jar /tmp/jenkins-cli.jar -s http://localhost:8080/ -auth admin:$(sudo cat /var/lib/jenkins/secrets/initialAdminPassword)"
+while IFS= read -r plugin || [[ -n "$plugin" ]]; do
+    $JENKINS_CLI_CMD install-plugin "$plugin"
+done < /tmp/plugins.txt
+
+# Restart Jenkins
+sudo systemctl restart jenkins
+echo "Jenkins restarted"
+
 # Configure Nginx
 sudo rm /etc/nginx/sites-enabled/default
 sudo ln -s /etc/nginx/sites-available/jenkins /etc/nginx/sites-enabled/
