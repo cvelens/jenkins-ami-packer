@@ -25,16 +25,17 @@ while [ "$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080)" != "40
 done
 
 # Jenkins CLI
-sudo wget http://localhost:8080/jnlpJars/jenkins-cli.jar -O /tmp/jenkins-cli.jar
+sudo wget http://localhost:8080/jnlpJars/jenkins-cli.jar -O /home/ubuntu/jenkins-cli.jar
 
 # Install Jenkins plugins
-JENKINS_CLI_CMD="sudo java -jar /tmp/jenkins-cli.jar -s http://localhost:8080/ -auth admin:$(sudo cat /var/lib/jenkins/secrets/initialAdminPassword)"
+JENKINS_CLI_CMD="sudo java -jar /home/ubuntu/jenkins-cli.jar -s http://localhost:8080/ -auth admin:$(sudo cat /var/lib/jenkins/secrets/initialAdminPassword)"
 while IFS= read -r plugin || [[ -n "$plugin" ]]; do
     $JENKINS_CLI_CMD install-plugin "$plugin"
-done < /tmp/plugins.txt
+done < /home/ubuntu/plugins.txt
 
 # Restart Jenkins
 sudo systemctl restart jenkins
+echo "Jenkins restarted"
 
 # Install certbot for Let's Encrypt
 sudo add-apt-repository -y ppa:certbot/certbot
