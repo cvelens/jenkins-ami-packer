@@ -7,6 +7,10 @@ packer {
   }
 }
 
+variable "DH_USERNAME" {
+  default = ""
+}
+
 variable "name" {
   type    = string
   default = "csye7125_jenkins"
@@ -76,10 +80,16 @@ build {
   sources = ["source.amazon-ebs.jenkins"]
 
   provisioner "shell" {
-  inline = [
-    "cat /etc/environment"
-  ]
-}
+    inline = [
+      "echo DH_USERNAME=${var.DH_USERNAME} | sudo tee -a /etc/environment"
+    ]
+  }
+
+  provisioner "shell" {
+    inline = [
+      "cat /etc/environment"
+    ]
+  }
 
   provisioner "shell" {
     environment_vars = [
