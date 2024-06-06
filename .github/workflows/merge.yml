@@ -33,18 +33,16 @@ jobs:
     - name: Packer template validation
       run: packer validate ami.pkr.hcl
 
-    - name: Save envs
-      run: |
-        echo "DH_USERNAME=${{secrets.DH_USERNAME}}" | sudo tee -a /etc/environment
-        echo "DH_TOKEN=${{secrets.DH_TOKEN}}" | sudo tee -a /etc/environment
-        echo "DH_CRED_ID=${{secrets.DH_CRED_ID}}" | sudo tee -a /etc/environment
-        echo "GH_USERNAME=${{secrets.GH_USERNAME}}" | sudo tee -a /etc/environment
-        echo "GH_TOKEN=${{secrets.GH_TOKEN}}" | sudo tee -a /etc/environment
-        echo "GH_CRED_ID=${{secrets.GH_CRED_ID}}" | sudo tee -a /etc/environment
-
-    - name: Verify 
-      run: |
-        cat /etc/environment
-
     - name: Building Packer Template
-      run: packer build ami.pkr.hcl 
+      run: |
+        packer build \
+          -var "AWS_REGION=${{secrets.AWS_REGION}}" \
+          -var "AWS_ACCESS_KEY_ID=${{secrets.AWS_ACCESS_KEY_ID}}" \
+          -var "AWS_SECRET_ACCESS_KEY=${{secrets.AWS_SECRET_ACCESS_KEY}}" \
+          -var "DH_USERNAME=${{secrets.DH_USERNAME}}" \
+          -var "DH_TOKEN=${{secrets.DH_TOKEN}}" \
+          -var "DH_CRED_ID=${{secrets.DH_CRED_ID}}" \
+          -var "GH_USERNAME=${{secrets.GH_USERNAME}}" \
+          -var "GH_TOKEN=${{secrets.GH_TOKEN}}" \
+          -var "GH_CRED_ID=${{secrets.GH_CRED_ID}}" \
+          ami.pkr.hcl
