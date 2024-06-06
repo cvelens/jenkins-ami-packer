@@ -113,7 +113,7 @@ build {
       "echo 'GH_USERNAME=${var.GH_USERNAME}' | sudo tee -a /etc/environment",
       "echo 'GH_CRED_ID=${var.GH_CRED_ID}' | sudo tee -a /etc/environment",
       "echo 'GH_TOKEN=${var.GH_TOKEN}' | sudo tee -a /etc/environment",
-      "cat /etc/environment"
+      "sudo cat /etc/environment"
     ]
   }
 
