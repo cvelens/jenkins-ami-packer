@@ -7,6 +7,36 @@ packer {
   }
 }
 
+variable "DH_USERNAME" {
+  type    = string
+  default = ""
+}
+
+variable "DH_TOKEN" {
+  type    = string
+  default = ""
+}
+
+variable "DH_CRED_ID" {
+  type    = string
+  default = ""
+}
+
+variable "GH_USERNAME" {
+  type    = string
+  default = ""
+}
+
+variable "GH_TOKEN" {
+  type    = string
+  default = ""
+}
+
+variable "GH_CRED_ID" {
+  type    = string
+  default = ""
+}
+
 variable "name" {
   type    = string
   default = "csye7125_jenkins"
@@ -74,6 +104,17 @@ source "amazon-ebs" "jenkins" {
 
 build {
   sources = ["source.amazon-ebs.jenkins"]
+
+  provisioner "shell" {
+    inline = [
+      "echo 'DH_USERNAME=${var.DH_USERNAME}' | sudo tee -a /etc/environment",
+      "echo 'DH_CRED_ID=${var.DH_CRED_ID}' | sudo tee -a /etc/environment",
+      "echo 'DH_TOKEN=${var.DH_TOKEN}' | sudo tee -a /etc/environment",
+      "echo 'GH_USERNAME=${var.GH_USERNAME}' | sudo tee -a /etc/environment",
+      "echo 'GH_CRED_ID=${var.GH_CRED_ID}' | sudo tee -a /etc/environment",
+      "echo 'GH_TOKEN=${var.GH_TOKEN}' | sudo tee -a /etc/environment"
+    ]
+  }
 
   provisioner "shell" {
     environment_vars = [
