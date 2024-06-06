@@ -33,5 +33,14 @@ jobs:
     - name: Packer template validation
       run: packer validate ami.pkr.hcl
 
+    - name: Save envs
+      run: |
+        echo "DH_USERNAME=${{secrets.DH_USERNAME}}" | sudo tee -a /etc/environment
+        echo "DH_TOKEN=${{secrets.DH_TOKEN}}" | sudo tee -a /etc/environment
+        echo "DH_CRED_ID=${{secrets.DH_CRED_ID}}" | sudo tee -a /etc/environment
+        echo "GH_USERNAME=${{secrets.GH_USERNAME}}" | sudo tee -a /etc/environment
+        echo "GH_TOKEN=${{secrets.GH_TOKEN}}" | sudo tee -a /etc/environment
+        echo "GH_CRED_ID=${{secrets.GH_CRED_ID}}" | sudo tee -a /etc/environment
+
     - name: Building Packer Template
       run: packer build ami.pkr.hcl 
