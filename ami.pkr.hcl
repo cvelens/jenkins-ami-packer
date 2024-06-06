@@ -7,6 +7,36 @@ packer {
   }
 }
 
+variable "DH_USERNAME" {
+  type    = string
+  default = ""
+}
+
+variable "DH_TOKEN" {
+  type    = string
+  default = ""
+}
+
+variable "DH_CRED_ID" {
+  type    = string
+  default = ""
+}
+
+variable "GH_USERNAME" {
+  type    = string
+  default = ""
+}
+
+variable "GH_TOKEN" {
+  type    = string
+  default = ""
+}
+
+variable "GH_CRED_ID" {
+  type    = string
+  default = ""
+}
+
 variable "name" {
   type    = string
   default = "csye7125_jenkins"
@@ -77,12 +107,12 @@ build {
 
   provisioner "shell" {
     inline = [
-      "echo 'DH_USERNAME=${DH_USERNAME}' | sudo tee -a /etc/environment",
-      "echo 'DH_CRED_ID=${DH_CRED_ID}' | sudo tee -a /etc/environment",
-      "echo 'DH_TOKEN=${DH_TOKEN}' | sudo tee -a /etc/environment"
-      "echo 'GH_USERNAME=${GH_USERNAME}' | sudo tee -a /etc/environment",
-      "echo 'GH_CRED_ID=${GH_CRED_ID}' | sudo tee -a /etc/environment",
-      "echo 'GH_TOKEN=${GH_TOKEN}' | sudo tee -a /etc/environment"
+      "echo 'DH_USERNAME=${var.DH_USERNAME}' | sudo tee -a /etc/environment",
+      "echo 'DH_CRED_ID=${var.DH_CRED_ID}' | sudo tee -a /etc/environment",
+      "echo 'DH_TOKEN=${var.DH_TOKEN}' | sudo tee -a /etc/environment",
+      "echo 'GH_USERNAME=${var.GH_USERNAME}' | sudo tee -a /etc/environment",
+      "echo 'GH_CRED_ID=${var.GH_CRED_ID}' | sudo tee -a /etc/environment",
+      "echo 'GH_TOKEN=${var.GH_TOKEN}' | sudo tee -a /etc/environment"
     ]
   }
 
@@ -113,26 +143,6 @@ build {
   provisioner "file" {
     source      = "certbot_renewal.sh"
     destination = "/home/ubuntu/certbot_renewal.sh"
-  }
-
-    provisioner "file" {
-    source      = "01-credentials.groovy"
-    destination = "/home/ubuntu/01-credentials.groovy"
-  }
-
-  provisioner "file" {
-    source      = "04-seedJob.groovy"
-    destination = "/home/ubuntu/04-seedJob.groovy"
-  }
-
-  provisioner "file" {
-    source      = "03-approval.groovy"
-    destination = "/home/ubuntu/03-approval.groovy"
-  }
-  
-  provisioner "file" {
-    source      = "seed.groovy"
-    destination = "/home/ubuntu/seed.groovy"
   }
 
   provisioner "shell" {
