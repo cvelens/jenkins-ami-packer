@@ -36,13 +36,5 @@ jobs:
     - name: Building Packer Template
       run: |
         packer build \
-          -var "AWS_REGION=${{secrets.AWS_REGION}}" \
-          -var "AWS_ACCESS_KEY_ID=${{secrets.AWS_ACCESS_KEY_ID}}" \
-          -var "AWS_SECRET_ACCESS_KEY=${{secrets.AWS_SECRET_ACCESS_KEY}}" \
           -var "DH_USERNAME=${{secrets.DH_USERNAME}}" \
-          -var "DH_TOKEN=${{secrets.DH_TOKEN}}" \
-          -var "DH_CRED_ID=${{secrets.DH_CRED_ID}}" \
-          -var "GH_USERNAME=${{secrets.GH_USERNAME}}" \
-          -var "GH_TOKEN=${{secrets.GH_TOKEN}}" \
-          -var "GH_CRED_ID=${{secrets.GH_CRED_ID}}" \
           ami.pkr.hcl
