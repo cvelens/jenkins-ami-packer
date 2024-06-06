@@ -4,6 +4,12 @@ env:
   AWS_REGION: ${{secrets.AWS_REGION}}
   AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
   AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+  DH_USERNAME: ${{secrets.DH_USERNAME}}
+  DH_TOKEN: ${{secrets.DH_TOKEN}}
+  DH_CRED_ID: ${{secrets.DH_CRED_ID}}
+  GH_USERNAME: ${{secrets.GH_USERNAME}}
+  GH_TOKEN: ${{secrets.GH_TOKEN}}
+  GH_CRED_ID: ${{secrets.GH_CRED_ID}}
 on:
   push:
     branches: [ main ]
