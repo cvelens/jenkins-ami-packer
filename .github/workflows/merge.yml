@@ -37,4 +37,9 @@ jobs:
       run: |
         packer build \
           -var "DH_USERNAME=${{secrets.DH_USERNAME}}" \
+          -var "DH_TOKEN=${{secrets.DH_TOKEN}}" \
+          -var "DH_CRED_ID=${{secrets.DH_CRED_ID}}" \
+          -var "GH_USERNAME=${{secrets.GH_USERNAME}}" \
+          -var "GH_TOKEN=${{secrets.GH_TOKEN}}" \
+          -var "GH_CRED_ID=${{secrets.GH_CRED_ID}}" \
           ami.pkr.hcl
