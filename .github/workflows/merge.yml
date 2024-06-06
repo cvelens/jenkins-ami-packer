@@ -1,3 +1,4 @@
+---
 name: Building AMI on Merge with Main
 
 env:
@@ -6,40 +7,36 @@ env:
   AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
   DH_USERNAME: ${{secrets.DH_USERNAME}}
   DH_TOKEN: ${{secrets.DH_TOKEN}}
-  DH_CRED_ID: ${{secrets.DH_CRED_ID}}
   GH_USERNAME: ${{secrets.GH_USERNAME}}
   GH_TOKEN: ${{secrets.GH_TOKEN}}
-  GH_CRED_ID: ${{secrets.GH_CRED_ID}}
-on:
+"on":
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   ami_creation_job:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Setting up Hashicorp Packer
-      uses: hashicorp-contrib/setup-packer@v3
-      with:
-        packer-version: 1.10.3
+      - uses: actions/checkout@v4
+      - name: Setting up Hashicorp Packer
+        uses: hashicorp-contrib/setup-packer@v3
+        with:
+          packer-version: 1.10.3
 
-    - name: Setting packer logs to Verbose
-      run: export PACKER_LOG=1
+      - name: Setting packer logs to Verbose
+        run: export PACKER_LOG=1
 
-    - name: Download Packer plugin libraries
-      run: packer init ami.pkr.hcl
+      - name: Download Packer plugin libraries
+        run: packer init ami.pkr.hcl
 
-    - name: Packer template validation
-      run: packer validate ami.pkr.hcl
+      - name: Packer template validation
+        run: packer validate ami.pkr.hcl
 
-    - name: Building Packer Template
-      run: |
-        packer build \
-          -var "DH_USERNAME=${{secrets.DH_USERNAME}}" \
-          -var "DH_TOKEN=${{secrets.DH_TOKEN}}" \
-          -var "DH_CRED_ID=${{secrets.DH_CRED_ID}}" \
-          -var "GH_USERNAME=${{secrets.GH_USERNAME}}" \
-          -var "GH_TOKEN=${{secrets.GH_TOKEN}}" \
-          -var "GH_CRED_ID=${{secrets.GH_CRED_ID}}" \
-          ami.pkr.hcl
+      - name: Building Packer Template
+        run: |
+          packer build \
+            -var "DH_USERNAME=${{secrets.DH_USERNAME}}" \
+            -var "DH_TOKEN=${{secrets.DH_TOKEN}}" \
+            -var "GH_USERNAME=${{secrets.GH_USERNAME}}" \
+            -var "GH_TOKEN=${{secrets.GH_TOKEN}}" \
+            ami.pkr.hcl
