@@ -15,7 +15,7 @@ pipelineJob('Multi-Platform-Container-Image') {
                     stages {
                         stage('Checkout') {
                             steps {
-                                git branch: 'main', url: 'https://github.com/lokesh1306/jenkins-test.git', credentialsId: env.GITHUB_CREDENTIALS_ID
+                                git branch: 'main', url: 'https://github.com/cyse7125-su24-team15/static-site', credentialsId: env.GITHUB_CREDENTIALS_ID
                             }
                         }
                         stage('Build and Publish') {

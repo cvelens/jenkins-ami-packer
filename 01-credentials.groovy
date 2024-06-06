@@ -1,37 +1,46 @@
-import com.cloudbees.plugins.credentials.CredentialsScope
-import com.cloudbees.plugins.credentials.domains.Domain
-import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl
-import com.cloudbees.plugins.credentials.SystemCredentialsProvider
-import hudson.util.Secret
+import jenkins.model.*
+import com.cloudbees.plugins.credentials.*
+import com.cloudbees.plugins.credentials.common.*
+import com.cloudbees.plugins.credentials.domains.*
+import com.cloudbees.plugins.credentials.impl.*
 
+def getEnvironmentVariable(String name) {
+    def value = ""
+    def envFile = new File('/etc/environment')
+    envFile.eachLine { line ->
+        if (line.startsWith("${name}=")) {
+            value = line.split('=')[1].replaceAll(/^"|"$/, '')
+        }
+    }
+    return value
+}
+
+def jenkinsInstance = Jenkins.getInstance()
 def domain = Domain.global()
-def store = SystemCredentialsProvider.getInstance().getStore()
+def store = jenkinsInstance.getExtensionList('com.cloudbees.plugins.credentials.SystemCredentialsProvider')[0].getStore()
 
-def githubUsername = System.getenv("GH_USERNAME")
-def githubToken = System.getenv("GH_TOKEN")
-def githubCredentialsId = System.getenv("GH_CRED_ID")
+def dockerHubUsername = getEnvironmentVariable('DH_USERNAME')
+def dockerHubPassword = getEnvironmentVariable('DH_TOKEN')
+def gitHubUsername = getEnvironmentVariable('GH_USERNAME')
+def gitHubPassword = getEnvironmentVariable('GH_TOKEN')
 
-def githubCredentials = new UsernamePasswordCredentialsImpl(
+def credentials = new UsernamePasswordCredentialsImpl(
     CredentialsScope.GLOBAL,
-    githubCredentialsId,
-    "GitHub credentials",
-    githubUsername,
-    githubToken
+    "dockerhub", 
+    "Docker Hub Credentials",
+    dockerHubUsername,
+    dockerHubPassword
 )
 
-def dockerUsername = System.getenv("DH_USERNAME")
-def dockerToken = System.getenv("DH_TOKEN")
-def dockerCredentialsId = System.getenv("DH_CRED_ID")
-
-def dockerCredentials = new UsernamePasswordCredentialsImpl(
+def credentials2 = new UsernamePasswordCredentialsImpl(
     CredentialsScope.GLOBAL,
-    dockerCredentialsId,
-    "Docker Hub credentials",
-    dockerUsername,
-    dockerToken
+    "github", 
+    "GitHub Credentials",
+    gitHubUsername,
+    gitHubPassword
 )
+store.addCredentials(domain, credentials)
+store.addCredentials(domain, credentials2)
 
-store.addCredentials(domain, githubCredentials)
-store.addCredentials(domain, dockerCredentials)
-
-println "GitHub and Docker Hub credentials added successfully"
+println("Credentials added successfully")
+jenkinsInstance.save()
