@@ -42,5 +42,9 @@ jobs:
         echo "GH_TOKEN=${{secrets.GH_TOKEN}}" | sudo tee -a /etc/environment
         echo "GH_CRED_ID=${{secrets.GH_CRED_ID}}" | sudo tee -a /etc/environment
 
+    - name: Verify 
+      run: |
+        cat /etc/environment
+
     - name: Building Packer Template
       run: packer build ami.pkr.hcl 
