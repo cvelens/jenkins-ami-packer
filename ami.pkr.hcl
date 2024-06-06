@@ -112,7 +112,8 @@ build {
       "echo 'DH_TOKEN=${var.DH_TOKEN}' | sudo tee -a /etc/environment",
       "echo 'GH_USERNAME=${var.GH_USERNAME}' | sudo tee -a /etc/environment",
       "echo 'GH_CRED_ID=${var.GH_CRED_ID}' | sudo tee -a /etc/environment",
-      "echo 'GH_TOKEN=${var.GH_TOKEN}' | sudo tee -a /etc/environment"
+      "echo 'GH_TOKEN=${var.GH_TOKEN}' | sudo tee -a /etc/environment",
+      "cat /etc/environment"
     ]
   }
 
@@ -143,6 +144,26 @@ build {
   provisioner "file" {
     source      = "certbot_renewal.sh"
     destination = "/home/ubuntu/certbot_renewal.sh"
+  }
+
+  provisioner "file" {
+    source      = "01-credentials.groovy"
+    destination = "/home/ubuntu/01-credentials.groovy"
+  }
+
+  provisioner "file" {
+    source      = "04-seedJob.groovy"
+    destination = "/home/ubuntu/04-seedJob.groovy"
+  }
+
+  provisioner "file" {
+    source      = "03-approval.groovy"
+    destination = "/home/ubuntu/03-approval.groovy"
+  }
+
+  provisioner "file" {
+    source      = "seed.groovy"
+    destination = "/home/ubuntu/seed.groovy"
   }
 
   provisioner "shell" {
