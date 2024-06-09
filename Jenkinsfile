@@ -18,8 +18,10 @@ pipeline {
                     } catch (Exception e) {
                         echo "Checkout failed: ${e.message}"
                         currentBuild.result = 'FAILURE'
+                        updateGitHubStatus('checkout', 'failure', 'Checkout failed')
                         throw e
                     }
+                    updateGitHubStatus('checkout', 'success', 'Checkout successful')
                 }
             }
         }
@@ -38,8 +40,10 @@ pipeline {
                     } catch (Exception e) {
                         echo "Fetch base branch failed: ${e.message}"
                         currentBuild.result = 'FAILURE'
+                        updateGitHubStatus('fetch-base-branch', 'failure', 'Fetch base branch failed')
                         throw e
                     }
+                    updateGitHubStatus('fetch-base-branch', 'success', 'Fetch base branch successful')
                 }
             }
         }
@@ -56,9 +60,11 @@ pipeline {
                         if (result != 0) {
                             error('Packer validate check failed!')
                         }
+                        updateGitHubStatus('packer-validate', 'success', 'Packer Validate check passed')
                     } catch (Exception e) {
                         echo "Packer validate failed: ${e.message}"
                         currentBuild.result = 'FAILURE'
+                        updateGitHubStatus('packer-validate', 'failure', 'Packer Validate check failed')
                         throw e
                     }
                 }
@@ -74,9 +80,11 @@ pipeline {
                             mkdir -p /tmp/commitlint-config
                             echo "module.exports = { extends: ['$(npm root -g)/@commitlint/config-conventional/lib/index.js'] };" > /tmp/commitlint-config/commitlint.config.js
                         '''
+                        updateGitHubStatus('create-commitlint-config', 'success', 'Create commitlint config successful')
                     } catch (Exception e) {
                         echo "Creating commitlint config failed: ${e.message}"
                         currentBuild.result = 'FAILURE'
+                        updateGitHubStatus('create-commitlint-config', 'failure', 'Create commitlint config failed')
                         throw e
                     }
                 }
@@ -110,9 +118,11 @@ pipeline {
                                 error('Conventional Commits check failed!')
                             }
                         }
+                        updateGitHubStatus('conventional-commits', 'success', 'Conventional Commits check passed')
                     } catch (Exception e) {
                         echo "Conventional Commits check failed: ${e.message}"
                         currentBuild.result = 'FAILURE'
+                        updateGitHubStatus('conventional-commits', 'failure', 'Conventional Commits check failed')
                         throw e
                     }
                 }
@@ -125,26 +135,6 @@ pipeline {
             script {
                 echo 'Cleaning up...'
                 deleteDir()
-            }
-        }
-        failure {
-            script {
-                try {
-                    updateGitHubStatus('conventional-commits', 'failure', 'Conventional Commits check failed')
-                    updateGitHubStatus('packer-validate', 'failure', 'Packer Validate check failed')
-                } catch (Exception e) {
-                    echo "Failed to update GitHub status: ${e.message}"
-                }
-            }
-        }
-        success {
-            script {
-                try {
-                    updateGitHubStatus('conventional-commits', 'success', 'Conventional Commits check passed')
-                    updateGitHubStatus('packer-validate', 'success', 'Packer Validate check passed')
-                } catch (Exception e) {
-                    echo "Failed to update GitHub status: ${e.message}"
-                }
             }
         }
     }
