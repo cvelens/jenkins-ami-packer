@@ -8,20 +8,13 @@ pipeline {
         GITHUB_API_URL = 'https://api.github.com/repos'
     }
 
-
-stages {
+    stages {
         stage('Checkout') {
             steps {
                 script {
                     echo 'Checking out the repository...'
                     try {
-                        withCredentials([usernamePassword(credentialsId: 'github', usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_TOKEN')]) {
-                            sh "git clone https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}.git ."
-                            sh "git fetch origin pull/${PR_NUMBER}/head:pr-${PR_NUMBER}"
-                            sh "git checkout pr-${PR_NUMBER}"
-                            env.PR_SHA = sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
-                            echo "Checked out PR SHA: ${env.PR_SHA}"
-                        }
+                        git url: 'https://github.com/cyse7125-su24-team15/ami-jenkins.git', branch: 'main', credentialsId: 'github'
                     } catch (Exception e) {
                         echo "Checkout failed: ${e.message}"
                         currentBuild.result = 'FAILURE'
@@ -50,31 +43,33 @@ stages {
                 }
             }
         }
-        stage('Packer Validate') {
-            steps {
-                script {
-                    echo 'Running Packer validate...'
-                    try {
-                        def result = sh(
-                            script: 'packer validate ami.pkr.hcl',
-                            returnStatus: true
-                        )
-                        if (result != 0) {
-                            echo 'Packer Validate check failed!'
-                            updateGitHubStatus('packer-validate', 'failure', 'Packer Validate check failed', env.PR_SHA)
-                            error('Packer validate check failed!')
-                        }
-                        echo "Packer validate succeeded. Updating GitHub status to success."
-                        updateGitHubStatus('packer-validate', 'success', 'Packer Validate check passed', env.PR_SHA)
-                    } catch (Exception e) {
-                        echo "Packer validate failed: ${e.message}"
-                        currentBuild.result = 'FAILURE'
-                        updateGitHubStatus('packer-validate', 'failure', 'Packer Validate check failed', env.PR_SHA)
-                        throw e
-                    }
+
+stage('Packer Validate') {
+    steps {
+        script {
+            echo 'Running Packer validate...'
+            try {
+                def result = sh(
+                    script: 'packer validate ami.pkr.hcl',
+                    returnStatus: true
+                )
+                if (result != 0) {
+                    updateGitHubStatus('packer-validate', 'failure', 'Packer Validate check failed')
+                    error('Packer validate check failed!')
                 }
+                // Adding debugging information before the success status update
+                echo "Packer validate succeeded. Updating GitHub status to success."
+                updateGitHubStatus('packer-validate', 'success', 'Packer Validate check passed')
+            } catch (Exception e) {
+                echo "Packer validate failed: ${e.message}"
+                currentBuild.result = 'FAILURE'
+                updateGitHubStatus('packer-validate', 'failure', 'Packer Validate check failed')
+                throw e
             }
         }
+    }
+}
+
         stage('Create Commitlint Config') {
             steps {
                 script {
@@ -93,7 +88,7 @@ stages {
             }
         }
 
-       stage('Check Conventional Commits') {
+        stage('Check Conventional Commits') {
             steps {
                 script {
                     echo 'Checking Conventional Commits...'
@@ -117,15 +112,14 @@ stages {
                                 }
                             }
                             if (hasErrors) {
-                                updateGitHubStatus('conventional-commits', 'failure', 'Conventional Commits check failed', env.PR_SHA)
                                 error('Conventional Commits check failed!')
                             }
                         }
-                        updateGitHubStatus('conventional-commits', 'success', 'Conventional Commits check passed', env.PR_SHA)
+                        updateGitHubStatus('conventional-commits', 'success', 'Conventional Commits check passed')
                     } catch (Exception e) {
                         echo "Conventional Commits check failed: ${e.message}"
                         currentBuild.result = 'FAILURE'
-                        updateGitHubStatus('conventional-commits', 'failure', 'Conventional Commits check failed', env.PR_SHA)
+                        updateGitHubStatus('conventional-commits', 'failure', 'Conventional Commits check failed')
                         throw e
                     }
                 }
@@ -143,9 +137,10 @@ stages {
     }
 }
 
-void updateGitHubStatus(String context, String state, String description, String sha) {
+void updateGitHubStatus(String context, String state, String description) {
     withCredentials([usernamePassword(credentialsId: env.GITHUB_CREDENTIALS_ID, usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_TOKEN')]) {
-        echo "Updating GitHub status: context=${context}, state=${state}, description=${description}, commit=${sha}"
+        def GIT_COMMIT = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
+        echo "Updating GitHub status: context=${context}, state=${state}, description=${description}, commit=${GIT_COMMIT}"
         def payload = """
             {
                 "state": "${state}",
@@ -160,11 +155,11 @@ void updateGitHubStatus(String context, String state, String description, String
                  -H "Content-Type: application/json" \
                  -X POST \
                  -d '${payload}' \
-                 ${env.GITHUB_API_URL}/${env.GITHUB_REPO_OWNER}/${env.GITHUB_REPO_NAME}/statuses/${sha}
+                 ${env.GITHUB_API_URL}/${env.GITHUB_REPO_OWNER}/${env.GITHUB_REPO_NAME}/statuses/${GIT_COMMIT}
         """, returnStdout: true).trim()
         echo "GitHub API response: ${response}"
         
-        if (response.contains("error") || response.contains("Not Found")) {
+        if (response.contains("error")) {
             error("GitHub status update failed: ${response}")
         } else {
             echo "GitHub status update successful: ${response}"
