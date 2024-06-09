@@ -18,7 +18,6 @@ pipeline {
                     } catch (Exception e) {
                         echo "Checkout failed: ${e.message}"
                         currentBuild.result = 'FAILURE'
-                        updateGitHubStatus('checkout', 'failure', 'Checkout failed')
                         throw e
                     }
                 }
@@ -39,7 +38,6 @@ pipeline {
                     } catch (Exception e) {
                         echo "Fetch base branch failed: ${e.message}"
                         currentBuild.result = 'FAILURE'
-                        updateGitHubStatus('fetch-base-branch', 'failure', 'Fetch base branch failed')
                         throw e
                     }
                 }
@@ -78,7 +76,6 @@ pipeline {
                             mkdir -p /tmp/commitlint-config
                             echo "module.exports = { extends: ['$(npm root -g)/@commitlint/config-conventional/lib/index.js'] };" > /tmp/commitlint-config/commitlint.config.js
                         '''
-                        updateGitHubStatus('create-commitlint-config', 'success', 'Create commitlint config successful')
                     } catch (Exception e) {
                         echo "Creating commitlint config failed: ${e.message}"
                         currentBuild.result = 'FAILURE'
@@ -140,7 +137,7 @@ pipeline {
 void updateGitHubStatus(String context, String state, String description) {
     withCredentials([usernamePassword(credentialsId: env.GITHUB_CREDENTIALS_ID, usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_TOKEN')]) {
         def GIT_COMMIT = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
-        sh """
+        def response = sh(script: """
             curl -H "Authorization: token ${GITHUB_TOKEN}" \
                  -H "Content-Type: application/json" \
                  -X POST \
@@ -151,6 +148,7 @@ void updateGitHubStatus(String context, String state, String description) {
                      "context": "${context}"
                  }' \
                  ${env.GITHUB_API_URL}/${env.GITHUB_REPO_OWNER}/${env.GITHUB_REPO_NAME}/statuses/${GIT_COMMIT}
-        """
+        """, returnStdout: true).trim()
+        echo "GitHub API response: ${response}"
     }
 }
