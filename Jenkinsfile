@@ -12,7 +12,7 @@ pipeline {
         stage('Intial') {
             steps {
                 script {
-                    def originalCommitSHA = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
+                    def originalCommitSHA = env.GIT_COMMIT
                     echo "Original Commit SHA: ${originalCommitSHA}"
                     env.ORIGINAL_COMMIT_SHA = originalCommitSHA
                 }
