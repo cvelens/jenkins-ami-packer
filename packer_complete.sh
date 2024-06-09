@@ -34,7 +34,7 @@ done
 sudo wget http://localhost:8080/jnlpJars/jenkins-cli.jar -O /tmp/jenkins-cli.jar
 
 # Install Jenkins plugins
-sudo java -jar /tmp/jenkins-cli.jar -s http://localhost:8080/ -auth admin:$(sudo cat /var/lib/jenkins/secrets/initialAdminPassword) install-plugin git github github-api credentials job-dsl docker-workflow
+sudo java -jar /tmp/jenkins-cli.jar -s http://localhost:8080/ -auth admin:$(sudo cat /var/lib/jenkins/secrets/initialAdminPassword) install-plugin git github github-api credentials job-dsl docker-workflow conventional-commits
 
 # Install Docker
 sudo apt-get install docker.io -y

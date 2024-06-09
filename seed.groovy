@@ -45,3 +45,99 @@ pipelineJob('Multi-Platform-Container-Image') {
         githubPush()
     }
 }
+
+pipelineJob('AMI-Packer-Validate') {
+    definition {
+        cps {
+            script('''
+                pipeline {
+                    agent any
+
+                    environment {
+                        GITHUB_CREDENTIALS_ID = 'github'
+                        GITHUB_REPO_OWNER = 'cyse7125-su24-team15'  
+                        GITHUB_REPO_NAME = 'ami-jenkins'      
+                        GITHUB_API_URL = 'https://api.github.com/repos'
+                        GIT_COMMIT = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
+                    }
+
+                    stages {
+                        stage('Checkout') {
+                            steps {
+                                checkout scm
+                            }
+                        }
+
+                        stage('Packer Validate') {
+                            steps {
+                                script {
+                                    def result = sh(
+                                        script: 'packer validate ami.pkr.hck',
+                                        returnStatus: true
+                                    )
+                                    if (result != 0) {
+                                        error('Packer validate check failed!')
+                                    }
+                                }
+                            }
+                        }
+
+                        stage('Check Conventional Commits') {
+                            steps {
+                                script {
+                                    def result = sh(
+                                        script: 'git log --pretty=format:"%s" origin/main..HEAD | conventional-changelog-lint -p angular',
+                                        returnStatus: true
+                                    )
+                                    if (result != 0) {
+                                        error('Conventional Commits check failed!')
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    post {
+                        always {
+                            script {
+                                def packerStatus = currentBuild.currentResult == 'SUCCESS' ? 'success' : 'failure'
+                                def commitsStatus = currentBuild.currentResult == 'SUCCESS' ? 'success' : 'failure'
+                                withCredentials([string(credentialsId: env.GITHUB_CREDENTIALS_ID, variable: 'GITHUB_TOKEN')]) {
+                                    sh """
+                                        curl -H "Authorization: token ${GITHUB_TOKEN}" \
+                                             -H "Content-Type: application/json" \
+                                             -X POST \
+                                             -d '{
+                                                 "state": "${packerStatus}",
+                                                 "target_url": "${env.BUILD_URL}",
+                                                 "description": "Packer Validate check",
+                                                 "context": "packer-validate"
+                                             }' \
+                                             ${env.GITHUB_API_URL}/${env.GITHUB_REPO_OWNER}/${env.GITHUB_REPO_NAME}/statuses/${env.GIT_COMMIT}
+                                    """
+                                    sh """
+                                        curl -H "Authorization: token ${GITHUB_TOKEN}" \
+                                             -H "Content-Type: application/json" \
+                                             -X POST \
+                                             -d '{
+                                                 "state": "${commitsStatus}",
+                                                 "target_url": "${env.BUILD_URL}",
+                                                 "description": "Conventional Commits check",
+                                                 "context": "conventional-commits"
+                                             }' \
+                                             ${env.GITHUB_API_URL}/${env.GITHUB_REPO_OWNER}/${env.GITHUB_REPO_NAME}/statuses/${env.GIT_COMMIT}
+                                    """
+                                }
+                            }
+                            deleteDir()
+                        }
+                    }
+                }
+            '''.stripIndent())
+            sandbox(false)
+        }
+    }
+    triggers {
+        githubPush()
+    }
+}
