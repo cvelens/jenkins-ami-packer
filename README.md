@@ -2,7 +2,7 @@
 
 This repository contains the necessary files and configurations to create a Jenkins AMI (Amazon Machine Image) using Packer. The AMI is preconfigured with Jenkins, Nginx, and Let's Encrypt SSL certificates.
 
-## Prerequisitesd
+## Prerequisites
 
 Before getting started, ensure you have the following:
 
