@@ -21,7 +21,6 @@ pipeline {
                         updateGitHubStatus('checkout', 'failure', 'Checkout failed')
                         throw e
                     }
-                    updateGitHubStatus('checkout', 'success', 'Checkout successful')
                 }
             }
         }
@@ -43,7 +42,6 @@ pipeline {
                         updateGitHubStatus('fetch-base-branch', 'failure', 'Fetch base branch failed')
                         throw e
                     }
-                    updateGitHubStatus('fetch-base-branch', 'success', 'Fetch base branch successful')
                 }
             }
         }
@@ -84,7 +82,6 @@ pipeline {
                     } catch (Exception e) {
                         echo "Creating commitlint config failed: ${e.message}"
                         currentBuild.result = 'FAILURE'
-                        updateGitHubStatus('create-commitlint-config', 'failure', 'Create commitlint config failed')
                         throw e
                     }
                 }
