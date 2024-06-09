@@ -1,4 +1,4 @@
-# Jenkins AMI Creation with Packer
+# Jenkins AMI Creation with Packerx
 
 This repository contains the necessary files and configurations to create a Jenkins AMI (Amazon Machine Image) using Packer. The AMI is preconfigured with Jenkins, Nginx, and Let's Encrypt SSL certificates.
 

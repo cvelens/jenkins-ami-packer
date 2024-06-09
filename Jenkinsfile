@@ -44,28 +44,31 @@ pipeline {
             }
         }
 
-        stage('Packer Validate') {
-            steps {
-                script {
-                    echo 'Running Packer validate...'
-                    try {
-                        def result = sh(
-                            script: 'packer validate ami.pkr.hcl',
-                            returnStatus: true
-                        )
-                        if (result != 0) {
-                            error('Packer validate check failed!')
-                        }
-                        updateGitHubStatus('packer-validate', 'success', 'Packer Validate check passed')
-                    } catch (Exception e) {
-                        echo "Packer validate failed: ${e.message}"
-                        currentBuild.result = 'FAILURE'
-                        updateGitHubStatus('packer-validate', 'failure', 'Packer Validate check failed')
-                        throw e
-                    }
+stage('Packer Validate') {
+    steps {
+        script {
+            echo 'Running Packer validate...'
+            try {
+                def result = sh(
+                    script: 'packer validate ami.pkr.hcl',
+                    returnStatus: true
+                )
+                if (result != 0) {
+                    updateGitHubStatus('packer-validate', 'failure', 'Packer Validate check failed')
+                    error('Packer validate check failed!')
                 }
+                // Adding debugging information before the success status update
+                echo "Packer validate succeeded. Updating GitHub status to success."
+                updateGitHubStatus('packer-validate', 'success', 'Packer Validate check passed')
+            } catch (Exception e) {
+                echo "Packer validate failed: ${e.message}"
+                currentBuild.result = 'FAILURE'
+                updateGitHubStatus('packer-validate', 'failure', 'Packer Validate check failed')
+                throw e
             }
         }
+    }
+}
 
         stage('Create Commitlint Config') {
             steps {
@@ -138,21 +141,24 @@ void updateGitHubStatus(String context, String state, String description) {
     withCredentials([usernamePassword(credentialsId: env.GITHUB_CREDENTIALS_ID, usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_TOKEN')]) {
         def GIT_COMMIT = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
         echo "Updating GitHub status: context=${context}, state=${state}, description=${description}, commit=${GIT_COMMIT}"
+        def payload = """
+            {
+                "state": "${state}",
+                "target_url": "${env.BUILD_URL}",
+                "description": "${description}",
+                "context": "${context}"
+            }
+        """
+        echo "Payload: ${payload}"
         def response = sh(script: """
             curl -H "Authorization: token ${GITHUB_TOKEN}" \
                  -H "Content-Type: application/json" \
                  -X POST \
-                 -d '{
-                     "state": "${state}",
-                     "target_url": "${env.BUILD_URL}",
-                     "description": "${description}",
-                     "context": "${context}"
-                 }' \
+                 -d '${payload}' \
                  ${env.GITHUB_API_URL}/${env.GITHUB_REPO_OWNER}/${env.GITHUB_REPO_NAME}/statuses/${GIT_COMMIT}
         """, returnStdout: true).trim()
         echo "GitHub API response: ${response}"
         
-        // Check if the response contains an error
         if (response.contains("error")) {
             error("GitHub status update failed: ${response}")
         } else {
