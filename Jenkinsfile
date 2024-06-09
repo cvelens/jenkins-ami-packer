@@ -14,7 +14,8 @@ pipeline {
                 script {
                     echo 'Checking out the repository...'
                     try {
-                        git url: "https://github.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}.git", branch: 'main', credentialsId: 'github'
+                        // Checkout the PR branch
+                        checkout scm
                     } catch (Exception e) {
                         echo "Checkout failed: ${e.message}"
                         currentBuild.result = 'FAILURE'
@@ -32,33 +33,11 @@ pipeline {
                         withCredentials([usernamePassword(credentialsId: 'github', usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_TOKEN')]) {
                             sh '''
                                 git remote add upstream https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}.git || true
-                                git remote -v
                                 git fetch upstream main
                             '''
                         }
                     } catch (Exception e) {
                         echo "Fetch base branch failed: ${e.message}"
-                        currentBuild.result = 'FAILURE'
-                        throw e
-                    }
-                }
-            }
-        }
-
-        stage('Fetch PR Commits') {
-            steps {
-                script {
-                    echo 'Fetching commits from the feature branch...'
-                    try {
-                        withCredentials([usernamePassword(credentialsId: 'github', usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_TOKEN')]) {
-                            sh '''
-                                git fetch origin +refs/pull/*/head:refs/remotes/origin/pr/* || true
-                                git remote add fork https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}.git || true
-                                git fetch fork +refs/heads/*:refs/remotes/fork/*
-                            '''
-                        }
-                    } catch (Exception e) {
-                        echo "Fetch PR commits failed: ${e.message}"
                         currentBuild.result = 'FAILURE'
                         throw e
                     }
