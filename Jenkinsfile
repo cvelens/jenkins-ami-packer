@@ -14,7 +14,6 @@ pipeline {
                 script {
                     echo 'Checking out the repository...'
                     try {
-                        // Checkout the PR branch
                         checkout scm
                     } catch (Exception e) {
                         echo "Checkout failed: ${e.message}"
@@ -49,21 +48,18 @@ pipeline {
             steps {
                 script {
                     echo 'Running Packer validate...'
-                    def packerStatus = 'success'
                     try {
                         def result = sh(
                             script: 'packer validate ami.pkr.hcl',
                             returnStatus: true
                         )
                         if (result != 0) {
-                            packerStatus = 'failure'
                             error('Packer validate check failed!')
                         }
                     } catch (Exception e) {
                         echo "Packer validate failed: ${e.message}"
-                        packerStatus = 'failure'
-                    } finally {
-                        updateGitHubStatus('packer-validate', packerStatus, 'Packer Validate check')
+                        currentBuild.result = 'FAILURE'
+                        throw e
                     }
                 }
             }
@@ -91,7 +87,6 @@ pipeline {
             steps {
                 script {
                     echo 'Checking Conventional Commits...'
-                    def commitsStatus = 'success'
                     try {
                         def commits = sh(script: 'git log --pretty=format:"%s" upstream/main..HEAD', returnStdout: true).trim().split('\n')
                         if (commits.size() == 1 && commits[0].isEmpty()) {
@@ -112,15 +107,13 @@ pipeline {
                                 }
                             }
                             if (hasErrors) {
-                                commitsStatus = 'failure'
                                 error('Conventional Commits check failed!')
                             }
                         }
                     } catch (Exception e) {
                         echo "Conventional Commits check failed: ${e.message}"
-                        commitsStatus = 'failure'
-                    } finally {
-                        updateGitHubStatus('conventional-commits', commitsStatus, 'Conventional Commits check')
+                        currentBuild.result = 'FAILURE'
+                        throw e
                     }
                 }
             }
@@ -132,6 +125,18 @@ pipeline {
             script {
                 echo 'Cleaning up...'
                 deleteDir()
+            }
+        }
+        failure {
+            script {
+                updateGitHubStatus('conventional-commits', 'failure', 'Conventional Commits check failed')
+                updateGitHubStatus('packer-validate', 'failure', 'Packer Validate check failed')
+            }
+        }
+        success {
+            script {
+                updateGitHubStatus('conventional-commits', 'success', 'Conventional Commits check passed')
+                updateGitHubStatus('packer-validate', 'success', 'Packer Validate check passed')
             }
         }
     }
