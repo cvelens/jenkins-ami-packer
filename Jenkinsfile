@@ -14,7 +14,7 @@ pipeline {
                 script {
                     echo 'Checking out the repository...'
                     try {
-                        git url: 'https://github.com/cyse7125-su24-team15/ami-jenkins.git', branch: 'main', credentialsId: 'github'
+                        checkout scm
                     } catch (Exception e) {
                         echo "Checkout failed: ${e.message}"
                         currentBuild.result = 'FAILURE'
