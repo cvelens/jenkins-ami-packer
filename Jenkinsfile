@@ -9,15 +9,19 @@ pipeline {
     }
 
 
-    stages {
+stages {
         stage('Checkout') {
             steps {
                 script {
                     echo 'Checking out the repository...'
                     try {
-                        checkout scm
-                        env.PR_SHA = sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
-                        echo "Checked out PR SHA: ${env.PR_SHA}"
+                        withCredentials([usernamePassword(credentialsId: 'github', usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_TOKEN')]) {
+                            sh "git clone https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}.git ."
+                            sh "git fetch origin pull/${PR_NUMBER}/head:pr-${PR_NUMBER}"
+                            sh "git checkout pr-${PR_NUMBER}"
+                            env.PR_SHA = sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
+                            echo "Checked out PR SHA: ${env.PR_SHA}"
+                        }
                     } catch (Exception e) {
                         echo "Checkout failed: ${e.message}"
                         currentBuild.result = 'FAILURE'
