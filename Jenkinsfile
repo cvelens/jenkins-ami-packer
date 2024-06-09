@@ -87,6 +87,25 @@ pipeline {
             }
         }
 
+        stage('Fetch PR Commits') {
+            steps {
+                script {
+                    echo 'Fetching commits from the feature branch...'
+                    try {
+                        withCredentials([usernamePassword(credentialsId: 'github', usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_TOKEN')]) {
+                            sh '''
+                                git fetch origin +refs/pull/*/head:refs/remotes/origin/pr/*
+                            '''
+                        }
+                    } catch (Exception e) {
+                        echo "Fetch PR commits failed: ${e.message}"
+                        currentBuild.result = 'FAILURE'
+                        throw e
+                    }
+                }
+            }
+        }
+
         stage('Check Conventional Commits') {
             steps {
                 script {
