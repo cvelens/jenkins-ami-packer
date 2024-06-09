@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         GITHUB_CREDENTIALS_ID = 'github'
-        GITHUB_REPO_OWNER = 'cyse7125-su24-team15'
+        GITHUB_REPO_OWNER = 'cyse7125-su24-team15/ami-jenkins'
         GITHUB_REPO_NAME = 'ami-jenkins'
         GITHUB_API_URL = 'https://api.github.com/repos'
     }
@@ -14,9 +14,30 @@ pipeline {
                 script {
                     echo 'Checking out the repository...'
                     try {
-                        git url: 'https://github.com/cyse7125-su24-team15/ami-jenkins.git', branch: 'main', credentialsId: 'github'
+                        git url: "https://github.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}.git", branch: 'main', credentialsId: 'github'
                     } catch (Exception e) {
                         echo "Checkout failed: ${e.message}"
+                        currentBuild.result = 'FAILURE'
+                        throw e
+                    }
+                }
+            }
+        }
+
+        stage('Fetch Base Branch') {
+            steps {
+                script {
+                    echo 'Fetching base branch from original repository...'
+                    try {
+                        withCredentials([usernamePassword(credentialsId: 'github', usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_TOKEN')]) {
+                            sh '''
+                                git remote add upstream https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}.git || true
+                                git remote -v
+                                git fetch upstream main
+                            '''
+                        }
+                    } catch (Exception e) {
+                        echo "Fetch base branch failed: ${e.message}"
                         currentBuild.result = 'FAILURE'
                         throw e
                     }
@@ -48,28 +69,6 @@ pipeline {
             }
         }
 
-                                stage('Fetch Base Branch') {
-                            steps {
-                                script {
-                                    echo 'Fetching base branch from original repository...'
-                                    try {
-                                        withCredentials([usernamePassword(credentialsId: 'github', usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_TOKEN')]) {
-                                            sh '''
-                                                git remote remove upstream || true
-                                                git remote add upstream https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/cyse7125-su24-team15/ami-jenkins.git
-                                                git remote -v
-                                                git fetch upstream main
-                                            '''
-                                        }
-                                    } catch (Exception e) {
-                                        echo "Fetch base branch failed: ${e.message}"
-                                        currentBuild.result = 'FAILURE'
-                                        throw e
-                                    }
-                                }
-                            }
-                        }
-
         stage('Create Commitlint Config') {
             steps {
                 script {
@@ -95,23 +94,27 @@ pipeline {
                     def commitsStatus = 'success'
                     try {
                         def commits = sh(script: 'git log --pretty=format:"%s" upstream/main..HEAD', returnStdout: true).trim().split('\n')
-                        echo "Commits to be checked: ${commits}"
-                        def hasErrors = false
-                        commits.each { commit ->
-                            def result = sh(
-                                script: """
-                                    echo "${commit}" | commitlint --config /tmp/commitlint-config/commitlint.config.js
-                                """,
-                                returnStatus: true
-                            )
-                            if (result != 0) {
-                                echo "Commit message failed: ${commit}"
-                                hasErrors = true
+                        if (commits.size() == 1 && commits[0].isEmpty()) {
+                            echo 'No new commits to check.'
+                        } else {
+                            echo "Commits to be checked: ${commits}"
+                            def hasErrors = false
+                            commits.each { commit ->
+                                def result = sh(
+                                    script: """
+                                        echo "${commit}" | commitlint --config /tmp/commitlint-config/commitlint.config.js
+                                    """,
+                                    returnStatus: true
+                                )
+                                if (result != 0) {
+                                    echo "Commit message failed: ${commit}"
+                                    hasErrors = true
+                                }
                             }
-                        }
-                        if (hasErrors) {
-                            commitsStatus = 'failure'
-                            error('Conventional Commits check failed!')
+                            if (hasErrors) {
+                                commitsStatus = 'failure'
+                                error('Conventional Commits check failed!')
+                            }
                         }
                     } catch (Exception e) {
                         echo "Conventional Commits check failed: ${e.message}"
