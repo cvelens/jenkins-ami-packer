@@ -48,6 +48,28 @@ pipeline {
             }
         }
 
+                                stage('Fetch Base Branch') {
+                            steps {
+                                script {
+                                    echo 'Fetching base branch from original repository...'
+                                    try {
+                                        withCredentials([usernamePassword(credentialsId: 'github', usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_TOKEN')]) {
+                                            sh '''
+                                                git remote remove upstream || true
+                                                git remote add upstream https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/cyse7125-su24-team15/ami-jenkins.git
+                                                git remote -v
+                                                git fetch upstream main
+                                            '''
+                                        }
+                                    } catch (Exception e) {
+                                        echo "Fetch base branch failed: ${e.message}"
+                                        currentBuild.result = 'FAILURE'
+                                        throw e
+                                    }
+                                }
+                            }
+                        }
+
         stage('Create Commitlint Config') {
             steps {
                 script {
