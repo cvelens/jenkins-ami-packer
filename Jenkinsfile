@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         GITHUB_CREDENTIALS_ID = 'github'
-        GITHUB_REPO_OWNER = 'cyse7125-su24-team15/ami-jenkins'
+        GITHUB_REPO_OWNER = 'cyse7125-su24-team15'
         GITHUB_REPO_NAME = 'ami-jenkins'
         GITHUB_API_URL = 'https://api.github.com/repos'
     }
