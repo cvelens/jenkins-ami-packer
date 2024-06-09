@@ -129,14 +129,22 @@ pipeline {
         }
         failure {
             script {
-                updateGitHubStatus('conventional-commits', 'failure', 'Conventional Commits check failed')
-                updateGitHubStatus('packer-validate', 'failure', 'Packer Validate check failed')
+                try {
+                    updateGitHubStatus('conventional-commits', 'failure', 'Conventional Commits check failed')
+                    updateGitHubStatus('packer-validate', 'failure', 'Packer Validate check failed')
+                } catch (Exception e) {
+                    echo "Failed to update GitHub status: ${e.message}"
+                }
             }
         }
         success {
             script {
-                updateGitHubStatus('conventional-commits', 'success', 'Conventional Commits check passed')
-                updateGitHubStatus('packer-validate', 'success', 'Packer Validate check passed')
+                try {
+                    updateGitHubStatus('conventional-commits', 'success', 'Conventional Commits check passed')
+                    updateGitHubStatus('packer-validate', 'success', 'Packer Validate check passed')
+                } catch (Exception e) {
+                    echo "Failed to update GitHub status: ${e.message}"
+                }
             }
         }
     }
