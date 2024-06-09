@@ -9,11 +9,12 @@ pipeline {
     }
 
     stages {
-        stage('Intial') {
-                        steps {
+        stage('Initialize') {
+            steps {
                 script {
+                    // Fetch the PR commit SHA before the merge
                     withCredentials([usernamePassword(credentialsId: env.GITHUB_CREDENTIALS_ID, usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_TOKEN')]) {
-                        def prCommitSHA = sh(script: "git ls-remote https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}.git refs/heads/${env.CHANGE_BRANCH} | cut -f1", returnStdout: true).trim()
+                        def prCommitSHA = sh(script: "git ls-remote https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}.git refs/pull/${env.CHANGE_ID}/head | cut -f1", returnStdout: true).trim()
                         echo "PR Commit SHA: ${prCommitSHA}"
                         env.PR_COMMIT_SHA = prCommitSHA
                     }
@@ -25,13 +26,16 @@ pipeline {
             steps {
                 script {
                     echo 'Checking out the repository...'
-                    try {
-                        checkout scm
-                    } catch (Exception e) {
-                        echo "Checkout failed: ${e.message}"
-                        currentBuild.result = 'FAILURE'
-                        throw e
-                    }
+                    checkout([
+                        $class: 'GitSCM',
+                        branches: [[name: 'refs/heads/' + env.CHANGE_TARGET]],
+                        doGenerateSubmoduleConfigurations: false,
+                        extensions: [[$class: 'PreBuildMerge', options: [mergeRemote: 'origin', mergeTarget: env.CHANGE_TARGET]]],
+                        userRemoteConfigs: [[
+                            url: 'https://github.com/' + env.GITHUB_REPO_OWNER + '/' + env.GITHUB_REPO_NAME + '.git',
+                            credentialsId: env.GITHUB_CREDENTIALS_ID
+                        ]]
+                    ])
                 }
             }
         }
@@ -40,23 +44,17 @@ pipeline {
             steps {
                 script {
                     echo 'Fetching base branch from original repository...'
-                    try {
-                        withCredentials([usernamePassword(credentialsId: 'github', usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_TOKEN')]) {
-                            sh '''
-                                git remote add upstream https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}.git || true
-                                git fetch upstream main
-                            '''
-                        }
-                    } catch (Exception e) {
-                        echo "Fetch base branch failed: ${e.message}"
-                        currentBuild.result = 'FAILURE'
-                        throw e
+                    withCredentials([usernamePassword(credentialsId: env.GITHUB_CREDENTIALS_ID, usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_TOKEN')]) {
+                        sh '''
+                            git remote add upstream https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}.git || true
+                            git fetch upstream main
+                        '''
                     }
                 }
             }
         }
 
-stage('Packer Validate') {
+        stage('Packer Validate') {
             steps {
                 script {
                     echo 'Running Packer validate...'
@@ -66,18 +64,29 @@ stage('Packer Validate') {
                             returnStatus: true
                         )
                         if (result != 0) {
-                            updateGitHubStatus('packer-validate', 'failure', 'Packer Validate check failed', env.ORIGINAL_COMMIT_SHA)
+                            updateGitHubStatus('packer-validate', 'failure', 'Packer Validate check failed', env.PR_COMMIT_SHA)
                             error('Packer validate check failed!')
                         }
-                        // Adding debugging information before the success status update
                         echo "Packer validate succeeded. Updating GitHub status to success."
-                        updateGitHubStatus('packer-validate', 'success', 'Packer Validate check passed', env.ORIGINAL_COMMIT_SHA)
+                        updateGitHubStatus('packer-validate', 'success', 'Packer Validate check passed', env.PR_COMMIT_SHA)
                     } catch (Exception e) {
                         echo "Packer validate failed: ${e.message}"
                         currentBuild.result = 'FAILURE'
-                        updateGitHubStatus('packer-validate', 'failure', 'Packer Validate check failed', env.ORIGINAL_COMMIT_SHA)
+                        updateGitHubStatus('packer-validate', 'failure', 'Packer Validate check failed', env.PR_COMMIT_SHA)
                         throw e
                     }
+                }
+            }
+        }
+
+        stage('Create Commitlint Config') {
+            steps {
+                script {
+                    echo 'Creating commitlint config...'
+                    sh '''
+                        mkdir -p /tmp/commitlint-config
+                        echo "module.exports = { extends: ['$(npm root -g)/@commitlint/config-conventional/lib/index.js'] };" > /tmp/commitlint-config/commitlint.config.js
+                    '''
                 }
             }
         }
@@ -86,36 +95,29 @@ stage('Packer Validate') {
             steps {
                 script {
                     echo 'Checking Conventional Commits...'
-                    try {
-                        def commits = sh(script: 'git log --pretty=format:"%s" upstream/main..HEAD', returnStdout: true).trim().split('\n')
-                        if (commits.size() == 1 && commits[0].isEmpty()) {
-                            echo 'No new commits to check.'
-                        } else {
-                            echo "Commits to be checked: ${commits}"
-                            def hasErrors = false
-                            commits.each { commit ->
-                                def result = sh(
-                                    script: """
-                                        echo "${commit}" | commitlint --config /tmp/commitlint-config/commitlint.config.js
-                                    """,
-                                    returnStatus: true
-                                )
-                                if (result != 0) {
-                                    echo "Commit message failed: ${commit}"
-                                    hasErrors = true
-                                }
-                            }
-                            if (hasErrors) {
-                                error('Conventional Commits check failed!')
+                    def commits = sh(script: 'git log --pretty=format:"%s" upstream/main..HEAD', returnStdout: true).trim().split('\n')
+                    if (commits.size() == 1 && commits[0].isEmpty()) {
+                        echo 'No new commits to check.'
+                    } else {
+                        echo "Commits to be checked: ${commits}"
+                        def hasErrors = false
+                        commits.each { commit ->
+                            def result = sh(
+                                script: """
+                                    echo "${commit}" | commitlint --config /tmp/commitlint-config/commitlint.config.js
+                                """,
+                                returnStatus: true
+                            )
+                            if (result != 0) {
+                                echo "Commit message failed: ${commit}"
+                                hasErrors = true
                             }
                         }
-                        updateGitHubStatus('conventional-commits', 'success', 'Conventional Commits check passed', env.ORIGINAL_COMMIT_SHA)
-                    } catch (Exception e) {
-                        echo "Conventional Commits check failed: ${e.message}"
-                        currentBuild.result = 'FAILURE'
-                        updateGitHubStatus('conventional-commits', 'failure', 'Conventional Commits check failed', env.ORIGINAL_COMMIT_SHA)
-                        throw e
+                        if (hasErrors) {
+                            error('Conventional Commits check failed!')
+                        }
                     }
+                    updateGitHubStatus('conventional-commits', 'success', 'Conventional Commits check passed', env.PR_COMMIT_SHA)
                 }
             }
         }
