@@ -18,7 +18,6 @@ pipeline {
                     } catch (Exception e) {
                         echo "Checkout failed: ${e.message}"
                         currentBuild.result = 'FAILURE'
-                        updateGitHubStatus('checkout', 'failure', 'Checkout failed')
                         throw e
                     }
                 }
@@ -39,7 +38,6 @@ pipeline {
                     } catch (Exception e) {
                         echo "Fetch base branch failed: ${e.message}"
                         currentBuild.result = 'FAILURE'
-                        updateGitHubStatus('fetch-base-branch', 'failure', 'Fetch base branch failed')
                         throw e
                     }
                 }
@@ -78,7 +76,6 @@ pipeline {
                             mkdir -p /tmp/commitlint-config
                             echo "module.exports = { extends: ['$(npm root -g)/@commitlint/config-conventional/lib/index.js'] };" > /tmp/commitlint-config/commitlint.config.js
                         '''
-                        updateGitHubStatus('create-commitlint-config', 'success', 'Create commitlint config successful')
                     } catch (Exception e) {
                         echo "Creating commitlint config failed: ${e.message}"
                         currentBuild.result = 'FAILURE'
