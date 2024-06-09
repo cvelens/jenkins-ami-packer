@@ -137,6 +137,7 @@ pipeline {
 void updateGitHubStatus(String context, String state, String description) {
     withCredentials([usernamePassword(credentialsId: env.GITHUB_CREDENTIALS_ID, usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_TOKEN')]) {
         def GIT_COMMIT = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
+        echo "Updating GitHub status: context=${context}, state=${state}, description=${description}, commit=${GIT_COMMIT}"
         def response = sh(script: """
             curl -H "Authorization: token ${GITHUB_TOKEN}" \
                  -H "Content-Type: application/json" \
@@ -150,5 +151,12 @@ void updateGitHubStatus(String context, String state, String description) {
                  ${env.GITHUB_API_URL}/${env.GITHUB_REPO_OWNER}/${env.GITHUB_REPO_NAME}/statuses/${GIT_COMMIT}
         """, returnStdout: true).trim()
         echo "GitHub API response: ${response}"
+        
+        // Check if the response contains an error
+        if (response.contains("error")) {
+            error("GitHub status update failed: ${response}")
+        } else {
+            echo "GitHub status update successful: ${response}"
+        }
     }
 }
