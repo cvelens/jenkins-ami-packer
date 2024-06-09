@@ -94,7 +94,9 @@ pipeline {
                     try {
                         withCredentials([usernamePassword(credentialsId: 'github', usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_TOKEN')]) {
                             sh '''
-                                git fetch origin +refs/pull/*/head:refs/remotes/origin/pr/*
+                                git fetch origin +refs/pull/*/head:refs/remotes/origin/pr/* || true
+                                git remote add fork https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}.git || true
+                                git fetch fork +refs/heads/*:refs/remotes/fork/*
                             '''
                         }
                     } catch (Exception e) {
