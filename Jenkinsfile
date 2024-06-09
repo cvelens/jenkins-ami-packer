@@ -9,6 +9,15 @@ pipeline {
     }
 
     stages {
+        stage('Intial') {
+            steps {
+                script {
+                    def originalCommitSHA = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
+                    echo "Original Commit SHA: ${originalCommitSHA}"
+                    env.ORIGINAL_COMMIT_SHA = originalCommitSHA
+                }
+            }
+        }
         stage('Checkout') {
             steps {
                 script {
@@ -45,43 +54,25 @@ pipeline {
         }
 
 stage('Packer Validate') {
-    steps {
-        script {
-            echo 'Running Packer validate...'
-            try {
-                def result = sh(
-                    script: 'packer validate ami.pkr.hcl',
-                    returnStatus: true
-                )
-                if (result != 0) {
-                    updateGitHubStatus('packer-validate', 'failure', 'Packer Validate check failed')
-                    error('Packer validate check failed!')
-                }
-                // Adding debugging information before the success status update
-                echo "Packer validate succeeded. Updating GitHub status to success."
-                updateGitHubStatus('packer-validate', 'success', 'Packer Validate check passed')
-            } catch (Exception e) {
-                echo "Packer validate failed: ${e.message}"
-                currentBuild.result = 'FAILURE'
-                updateGitHubStatus('packer-validate', 'failure', 'Packer Validate check failed')
-                throw e
-            }
-        }
-    }
-}
-
-        stage('Create Commitlint Config') {
             steps {
                 script {
-                    echo 'Creating commitlint config...'
+                    echo 'Running Packer validate...'
                     try {
-                        sh '''
-                            mkdir -p /tmp/commitlint-config
-                            echo "module.exports = { extends: ['$(npm root -g)/@commitlint/config-conventional/lib/index.js'] };" > /tmp/commitlint-config/commitlint.config.js
-                        '''
+                        def result = sh(
+                            script: 'packer validate ami.pkr.hcl',
+                            returnStatus: true
+                        )
+                        if (result != 0) {
+                            updateGitHubStatus('packer-validate', 'failure', 'Packer Validate check failed', env.ORIGINAL_COMMIT_SHA)
+                            error('Packer validate check failed!')
+                        }
+                        // Adding debugging information before the success status update
+                        echo "Packer validate succeeded. Updating GitHub status to success."
+                        updateGitHubStatus('packer-validate', 'success', 'Packer Validate check passed', env.ORIGINAL_COMMIT_SHA)
                     } catch (Exception e) {
-                        echo "Creating commitlint config failed: ${e.message}"
+                        echo "Packer validate failed: ${e.message}"
                         currentBuild.result = 'FAILURE'
+                        updateGitHubStatus('packer-validate', 'failure', 'Packer Validate check failed', env.ORIGINAL_COMMIT_SHA)
                         throw e
                     }
                 }
@@ -115,11 +106,11 @@ stage('Packer Validate') {
                                 error('Conventional Commits check failed!')
                             }
                         }
-                        updateGitHubStatus('conventional-commits', 'success', 'Conventional Commits check passed')
+                        updateGitHubStatus('conventional-commits', 'success', 'Conventional Commits check passed', env.ORIGINAL_COMMIT_SHA)
                     } catch (Exception e) {
                         echo "Conventional Commits check failed: ${e.message}"
                         currentBuild.result = 'FAILURE'
-                        updateGitHubStatus('conventional-commits', 'failure', 'Conventional Commits check failed')
+                        updateGitHubStatus('conventional-commits', 'failure', 'Conventional Commits check failed', env.ORIGINAL_COMMIT_SHA)
                         throw e
                     }
                 }
@@ -137,10 +128,9 @@ stage('Packer Validate') {
     }
 }
 
-void updateGitHubStatus(String context, String state, String description) {
+void updateGitHubStatus(String context, String state, String description, String commitSHA) {
     withCredentials([usernamePassword(credentialsId: env.GITHUB_CREDENTIALS_ID, usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_TOKEN')]) {
-        def GIT_COMMIT = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
-        echo "Updating GitHub status: context=${context}, state=${state}, description=${description}, commit=${GIT_COMMIT}"
+        echo "Updating GitHub status: context=${context}, state=${state}, description=${description}, commit=${commitSHA}"
         def payload = """
             {
                 "state": "${state}",
@@ -155,7 +145,7 @@ void updateGitHubStatus(String context, String state, String description) {
                  -H "Content-Type: application/json" \
                  -X POST \
                  -d '${payload}' \
-                 ${env.GITHUB_API_URL}/${env.GITHUB_REPO_OWNER}/${env.GITHUB_REPO_NAME}/statuses/${GIT_COMMIT}
+                 ${env.GITHUB_API_URL}/${env.GITHUB_REPO_OWNER}/${env.GITHUB_REPO_NAME}/statuses/${commitSHA}
         """, returnStdout: true).trim()
         echo "GitHub API response: ${response}"
         
