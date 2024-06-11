@@ -142,6 +142,11 @@ build {
   }
 
   provisioner "file" {
+    source      = "05-seedJob2.groovy"
+    destination = "/home/ubuntu/05-seedJob2.groovy"
+  }
+
+  provisioner "file" {
     source      = "seed.groovy"
     destination = "/home/ubuntu/seed.groovy"
   }

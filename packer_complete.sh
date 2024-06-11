@@ -62,6 +62,7 @@ sudo mv /home/ubuntu/certbot_initial.sh /usr/local/bin/certbot_initial.sh
 sudo mv /home/ubuntu/certbot_renewal.sh /usr/local/bin/certbot_renewal.sh
 sudo mv /home/ubuntu/01-credentials.groovy /var/lib/jenkins/init.groovy.d/01-credentials.groovy
 sudo mv /home/ubuntu/04-seedJob.groovy /var/lib/jenkins/init.groovy.d/04-seedJob.groovy
+sudo mv /home/ubuntu/05-seedJob2.groovy /var/lib/jenkins/init.groovy.d/05-seedJob2.groovy
 sudo cp /home/ubuntu/03-approval.groovy /var/lib/jenkins/init.groovy.d/03-approval.groovy
 sudo mv /home/ubuntu/seed.groovy /var/lib/jenkins/workspace/seed-job/seed.groovy
 sudo chmod 755 /usr/local/bin/certbot_initial.sh
