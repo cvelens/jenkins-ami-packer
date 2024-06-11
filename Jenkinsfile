@@ -82,7 +82,7 @@ pipeline {
                 script {
                     echo 'Running Packer validate'
                     try {
-                        def result = sh(script: 'packer validate ami.pkr.hcl', returnStatus: true)
+                        def result = sh(script: 'packer init ami.pkr.hcl && packer validate ami.pkr.hcl', returnStatus: true)
                         if (result != 0) {
                             updateGitHubStatus('packer-validate', 'failure', 'Packer Validate check failed', env.PR_COMMIT_SHA)
                             error('Packer validate check failed!')
