@@ -54,16 +54,18 @@ sudo unzip terraform_1.8.5_linux_amd64.zip -d /usr/local/bin
 # Install yamllint
 sudo apt-get install yamllint
 
+# Install Commitlint
+sudo apt update
+sudo apt install nodejs npm -y
+sudo npm install -g @commitlint/{cli,config-conventional}
+
 # Moving required files
 sudo mkdir -p /var/lib/jenkins/workspace/seed-job
 sudo mkdir -p /var/lib/jenkins/init.groovy.d
-sudo mv /home/ubuntu/jenkins_nginx_initial.conf /etc/nginx/sites-available/jenkins
-sudo mv /home/ubuntu/certbot_initial.sh /usr/local/bin/certbot_initial.sh
-sudo mv /home/ubuntu/certbot_renewal.sh /usr/local/bin/certbot_renewal.sh
-sudo mv /home/ubuntu/01-credentials.groovy /var/lib/jenkins/init.groovy.d/01-credentials.groovy
-sudo mv /home/ubuntu/04-seedJob.groovy /var/lib/jenkins/init.groovy.d/04-seedJob.groovy
-sudo cp /home/ubuntu/03-approval.groovy /var/lib/jenkins/init.groovy.d/03-approval.groovy
-sudo mv /home/ubuntu/seed.groovy /var/lib/jenkins/workspace/seed-job/seed.groovy
+sudo mv /home/ubuntu/nginx/jenkins_nginx_initial.conf /etc/nginx/sites-available/jenkins
+sudo mv /home/ubuntu/certbot/* /usr/local/bin/
+sudo mv /home/ubuntu/jenkins/init/* /var/lib/jenkins/init.groovy.d/
+sudo mv /home/ubuntu/jenkins/seed.groovy /var/lib/jenkins/workspace/seed-job/seed.groovy
 sudo chmod 755 /usr/local/bin/certbot_initial.sh
 sudo chmod 755 /usr/local/bin/certbot_renewal.sh
 sudo chmod 755 /var/lib/jenkins/init.groovy.d -R

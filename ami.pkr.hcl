@@ -107,43 +107,18 @@ build {
   }
 
   provisioner "file" {
-    source      = "jenkins_nginx_final.conf"
-    destination = "/home/ubuntu/jenkins_nginx_final.conf"
+    source      = "nginx"
+    destination = "/home/ubuntu/"
   }
 
   provisioner "file" {
-    source      = "jenkins_nginx_initial.conf"
-    destination = "/home/ubuntu/jenkins_nginx_initial.conf"
+    source      = "certbot"
+    destination = "/home/ubuntu/"
   }
 
   provisioner "file" {
-    source      = "certbot_initial.sh"
-    destination = "/home/ubuntu/certbot_initial.sh"
-  }
-
-  provisioner "file" {
-    source      = "certbot_renewal.sh"
-    destination = "/home/ubuntu/certbot_renewal.sh"
-  }
-
-  provisioner "file" {
-    source      = "01-credentials.groovy"
-    destination = "/home/ubuntu/01-credentials.groovy"
-  }
-
-  provisioner "file" {
-    source      = "04-seedJob.groovy"
-    destination = "/home/ubuntu/04-seedJob.groovy"
-  }
-
-  provisioner "file" {
-    source      = "03-approval.groovy"
-    destination = "/home/ubuntu/03-approval.groovy"
-  }
-
-  provisioner "file" {
-    source      = "seed.groovy"
-    destination = "/home/ubuntu/seed.groovy"
+    source      = "jenkins"
+    destination = "/home/ubuntu/"
   }
 
   provisioner "shell" {
