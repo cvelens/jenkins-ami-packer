@@ -35,7 +35,6 @@ pipeline {
         stage('Initialize') {
             steps {
                 script {
-                    // Fetch the PR commit SHA before the merge
                     withCredentials([usernamePassword(credentialsId: GITHUB_CREDENTIALS_ID, usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_TOKEN')]) {
                         def prCommitSHA = sh(script: "git ls-remote https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}.git refs/pull/${env.CHANGE_ID}/head | cut -f1", returnStdout: true).trim()
                         echo "PR Commit SHA: ${prCommitSHA}"
@@ -48,7 +47,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 script {
-                    echo 'Checking out the repository...'
+                    echo 'Checking out the repository'
                     checkout([
                         $class: 'GitSCM',
                         branches: [[name: "FETCH_HEAD"]],
@@ -67,7 +66,7 @@ pipeline {
         stage('Fetch Base Branch') {
             steps {
                 script {
-                    echo 'Fetching base branch from original repository...'
+                    echo 'Fetching base branch from original repository'
                     withCredentials([usernamePassword(credentialsId: GITHUB_CREDENTIALS_ID, usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_TOKEN')]) {
                         sh '''
                             git remote add upstream https://$GITHUB_USERNAME:$GITHUB_TOKEN@github.com/$GITHUB_REPO_OWNER/$GITHUB_REPO_NAME.git || true
@@ -81,7 +80,7 @@ pipeline {
         stage('Packer Validate') {
             steps {
                 script {
-                    echo 'Running Packer validate...'
+                    echo 'Running Packer validate'
                     try {
                         def result = sh(script: 'packer validate ami.pkr.hcl', returnStatus: true)
                         if (result != 0) {
@@ -115,18 +114,16 @@ pipeline {
         stage('Check Conventional Commits') {
             steps {
                 script {
-                    echo 'Checking Conventional Commits...'
+                    echo 'Checking Conventional Commits'
                     withCredentials([usernamePassword(credentialsId: GITHUB_CREDENTIALS_ID, usernameVariable: 'GITHUB_USERNAME', passwordVariable: 'GITHUB_TOKEN')]) {
-                        // Fetch the PR branch and base branch to ensure we have the latest changes
                         sh """
                             git fetch https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}.git +refs/pull/${env.CHANGE_ID}/head:refs/remotes/origin/PR-${env.CHANGE_ID}
                             git fetch https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/${GITHUB_REPO_OWNER}/${GITHUB_REPO_NAME}.git +refs/heads/${env.CHANGE_TARGET}:refs/remotes/origin/${env.CHANGE_TARGET}
                         """
 
-                        // Log the commits in the PR branch that are not in the base branch
                         def commits = sh(script: "git log --pretty=format:'%s' origin/${env.CHANGE_TARGET}..origin/PR-${env.CHANGE_ID}", returnStdout: true).trim().split('\n')
                         if (commits.size() == 1 && commits[0].isEmpty()) {
-                            echo 'No new commits to check.'
+                            echo 'No new commits to check'
                         } else {
                             echo "Commits to be checked: ${commits}"
                             def hasErrors = false
@@ -152,7 +149,7 @@ pipeline {
     post {
         always {
             script {
-                echo 'Cleaning up...'
+                echo 'Cleaning up'
                 deleteDir()
             }
         }
