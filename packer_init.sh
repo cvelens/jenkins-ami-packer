@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Install Node and Commitlint
+sudo apt update -y
+sudo apt install nodejs npm -y
+sudo npm install -g @commitlint/{cli,config-conventional}
+
 # Update and install dependencies
 sudo apt-get update -y
 sudo apt-get install -y fontconfig openjdk-17-jre wget unzip gnupg2 nginx software-properties-common
