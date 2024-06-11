@@ -52,7 +52,7 @@ sudo wget https://releases.hashicorp.com/terraform/1.8.5/terraform_1.8.5_linux_a
 sudo unzip terraform_1.8.5_linux_amd64.zip -d /usr/local/bin
 
 # Install yamllint
-sudo apt-get install yamllint
+sudo apt-get install yamllint -y
 
 # Moving required files
 sudo mkdir -p /var/lib/jenkins/workspace/seed-job
