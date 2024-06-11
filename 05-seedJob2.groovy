@@ -11,7 +11,9 @@ import java.util.Arrays
 
 def repositories = [
     [owner: 'cyse7125-su24-team15', name: 'ami-jenkins'],
-    [owner: 'cyse7125-su24-team15', name: 'ami-jenkins2'],
+    [owner: 'cyse7125-su24-team15', name: 'infra-jenkins'],
+    [owner: 'cyse7125-su24-team15', name: 'static-site'],
+    [owner: 'cyse7125-su24-team15', name: 'k8s-yaml-manifests'],
 ]
 
 def githubCredentialsId = 'github'
@@ -19,16 +21,16 @@ def githubCredentialsId = 'github'
 repositories.each { repo ->
     def repoOwner = repo.owner
     def repoName = repo.name
-    def jobName = "${repoOwner}-${repoName}-pr-validation-multibranch-pipeline"
+    def jobName = "${repoOwner}-${repoName}-pipeline"
 
     def jenkinsInstance = Jenkins.getInstance()
 
     def job = jenkinsInstance.getItem(jobName)
     if (job == null) {
         job = jenkinsInstance.createProject(WorkflowMultiBranchProject, jobName)
-        println "Multibranch Pipeline job '${jobName}' created successfully."
+        println "Multibranch Pipeline job '${jobName}' created successfully"
     } else {
-        println "Multibranch Pipeline job '${jobName}' already exists."
+        println "Multibranch Pipeline job '${jobName}' already exists"
     }
 
     def scmSource = new GitHubSCMSource(repoOwner, repoName)
@@ -44,9 +46,9 @@ repositories.each { repo ->
     job.getSourcesList().clear()
     job.getSourcesList().add(branchSource)
 
-    job.getProjectFactory().setScriptPath('Jenkinsfile')  // Adjust if your Jenkinsfile is not in the root directory
+    job.getProjectFactory().setScriptPath('Jenkinsfile')  
 
     job.save()
 
-    println "Multibranch Pipeline job '${jobName}' configured successfully."
+    println "Multibranch Pipeline job '${jobName}' configured successfull"
 }

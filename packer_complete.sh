@@ -42,6 +42,18 @@ sudo apt-get install docker-buildx -y
 sudo usermod -aG docker jenkins
 sudo systemctl restart jenkins
 
+# Install Packer
+curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main" -y
+sudo apt-get update && sudo apt-get install packer
+
+# Install Terraform
+sudo wget https://releases.hashicorp.com/terraform/1.8.5/terraform_1.8.5_linux_amd64.zip
+sudo unzip terraform_1.8.5_linux_amd64.zip -d /usr/local/bin
+
+# Install yamllint
+sudo apt-get install yamllint
+
 # Moving required files
 sudo mkdir -p /var/lib/jenkins/workspace/seed-job
 sudo mkdir -p /var/lib/jenkins/init.groovy.d
