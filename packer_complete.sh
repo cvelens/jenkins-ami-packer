@@ -54,11 +54,6 @@ sudo unzip terraform_1.8.5_linux_amd64.zip -d /usr/local/bin
 # Install yamllint
 sudo apt-get install yamllint
 
-# Install Commitlint
-sudo apt update
-sudo apt install nodejs npm -y
-sudo npm install -g @commitlint/{cli,config-conventional}
-
 # Moving required files
 sudo mkdir -p /var/lib/jenkins/workspace/seed-job
 sudo mkdir -p /var/lib/jenkins/init.groovy.d
