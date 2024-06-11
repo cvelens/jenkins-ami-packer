@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Update and install dependencies
-sudo apt-get update
-sudo apt-get install -y fontconfig openjdk-17-jre wget gnupg2 nginx software-properties-common
+sudo apt-get update -y
+sudo apt-get install -y fontconfig openjdk-17-jre wget unzip gnupg2 nginx software-properties-common
 
 # Install jenkins
 sudo wget -O /usr/share/keyrings/jenkins-keyring.asc \
@@ -19,6 +19,5 @@ sudo systemctl start jenkins
 sudo systemctl status jenkins
 
 # Install certbot for Let's Encrypt
-sudo add-apt-repository -y ppa:certbot/certbot
-sudo apt-get update
+sudo apt-get update -y
 sudo apt-get install -y certbot python3-certbot-nginx
