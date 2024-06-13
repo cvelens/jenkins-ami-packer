@@ -3,6 +3,9 @@ import com.cloudbees.plugins.credentials.*
 import com.cloudbees.plugins.credentials.common.*
 import com.cloudbees.plugins.credentials.domains.*
 import com.cloudbees.plugins.credentials.impl.*
+import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl
+import hudson.util.Secret
+
 
 def getEnvironmentVariable(String name) {
     def value = ""
@@ -39,8 +42,14 @@ def credentials2 = new UsernamePasswordCredentialsImpl(
     gitHubUsername,
     gitHubPassword
 )
+def credentials3 = new StringCredentialsImpl(
+    CredentialsScope.GLOBAL,
+    "github-token", 
+    "GitHub Token",
+    Secret.fromString(gitHubPassword)
+)
 store.addCredentials(domain, credentials)
 store.addCredentials(domain, credentials2)
-
+store.addCredentials(domain, credentials3)
 println("Credentials added successfully")
 jenkinsInstance.save()

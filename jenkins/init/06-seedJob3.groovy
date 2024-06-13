@@ -10,10 +10,6 @@ import jenkins.scm.api.trait.SCMTrait
 import java.util.Arrays
 
 def repositories = [
-    [owner: 'cyse7125-su24-team15', name: 'ami-jenkins'],
-    [owner: 'cyse7125-su24-team15', name: 'infra-jenkins'],
-    [owner: 'cyse7125-su24-team15', name: 'static-site'],
-    [owner: 'cyse7125-su24-team15', name: 'k8s-yaml-manifests'],
     [owner: 'cyse7125-su24-team15', name: 'webapp-cve-processor'],
     [owner: 'cyse7125-su24-team15', name: 'database-migration'],
     [owner: 'cyse7125-su24-team15', name: 'helm-webapp-cve-processor'],
@@ -24,7 +20,7 @@ def githubCredentialsId = 'github'
 repositories.each { repo ->
     def repoOwner = repo.owner
     def repoName = repo.name
-    def jobName = "${repoOwner}-${repoName}-pipeline"
+    def jobName = "${repoOwner}-${repoName}-docker-pipeline"
 
     def jenkinsInstance = Jenkins.getInstance()
 
@@ -49,7 +45,7 @@ repositories.each { repo ->
     job.getSourcesList().clear()
     job.getSourcesList().add(branchSource)
 
-    job.getProjectFactory().setScriptPath('Jenkinsfile')  
+    job.getProjectFactory().setScriptPath('Jenkinsfile2')  
 
     job.save()
 
