@@ -14,34 +14,38 @@ Before getting started, ensure you have the following:
 
 The repository has the following structure:
 ```
+ami-jenkins
 ├── ami.pkr.hcl
-├── certbot_initial.sh
-├── certbot_renewal.sh
-├── jenkins_nginx_final.conf
-├── jenkins_nginx_initial.conf
+├── certbot
+│   ├── certbot_initial.sh
+│   └── certbot_renewal.sh
+├── jenkins
+│   ├── init
+│   │   ├── 01-credentials.groovy
+│   │   ├── 03-approval.groovy
+│   │   ├── 04-seedJob.groovy
+│   │   ├── 05-seedJob2.groovy
+│   └── seed.groovy
+├── nginx
+│   ├── jenkins_nginx_final.conf
+│   └── jenkins_nginx_initial.conf
 ├── packer_complete.sh
 ├── packer_init.sh
-├── 01-credentials.groovy
-├── 04-seedJob.groovy
-├── 03-approval.groovy
-├── seed.groovy
 └── .github
-└── workflows
-├── merge.yml
-└── pull.yml
+    └── workflows
+        ├── merge.yml
+        └── pull.yml
 ```
 
 - `ami.pkr.hcl`: The main Packer configuration file that defines the AMI creation process.
-- `certbot_initial.sh`: Script to obtain the initial Let's Encrypt SSL certificate.
-- `certbot_renewal.sh`: Script to renew the Let's Encrypt SSL certificate.
-- `jenkins_nginx_final.conf`: Nginx configuration file with SSL enabled.
-- `jenkins_nginx_initial.conf`: Initial Nginx configuration file without SSL.
+- `certbot/certbot_initial.sh`: Script to obtain the initial Let's Encrypt SSL certificate.
+- `certbot/certbot_renewal.sh`: Script to renew the Let's Encrypt SSL certificate.
+- `jenkins/init/*.groovy`: Groovy scripts for Jenkins initialization and configuration.
+- `jenkins/seed.groovy`: Jenkins job DSL script to create a multi-platform container image build job.
+- `nginx/jenkins_nginx_final.conf`: Nginx configuration file with SSL enabled.
+- `nginx/jenkins_nginx_initial.conf`: Initial Nginx configuration file without SSL.
 - `packer_complete.sh`: Script to perform final configurations and cleanup.
 - `packer_init.sh`: Script to install and initialize Jenkins, Nginx, and Certbot.
-- `01-credentials.groovy`: Groovy script to add Docker Hub and GitHub credentials to Jenkins.
-- `04-seedJob.groovy`: Groovy script to create a Jenkins seed job.
-- `03-approval.groovy`: Groovy script to approve pending scripts in Jenkins.
-- `seed.groovy`: Jenkins job DSL script to create a multi-platform container image build job.
 - `.github/workflows/merge.yml`: GitHub Actions workflow to build the AMI on merging with the main branch.
 - `.github/workflows/pull.yml`: GitHub Actions workflow to validate Packer configuration on pull requests.
 
@@ -59,14 +63,15 @@ The AMI creation process involves the following steps:
 
 ## Continuous Integration with Jenkins
 
-The Jenkins AMI includes a preconfigured job to build and publish multi-platform container images to Docker Hub. The job is created using Jenkins Job DSL and is triggered by a GitHub webhook.
+The Jenkins AMI includes preconfigured jobs to build and publish artifacts for various repositories. The jobs are created using Jenkins Job DSL and are triggered by GitHub webhooks.
 
-The following configuration files are used for setting up the Jenkins job:
+The following configuration files are used for setting up the Jenkins jobs:
 
-- `01-credentials.groovy`: Adds Docker Hub and GitHub credentials to Jenkins.
-- `04-seedJob.groovy`: Creates a Jenkins seed job to generate the multi-platform container image build job.
-- `03-approval.groovy`: Approves pending scripts in Jenkins for security.
-- `seed.groovy`: Defines the Jenkins job DSL script for creating the multi-platform container image build job.
+- `jenkins/init/01-credentials.groovy`: Adds Docker Hub and GitHub credentials to Jenkins.
+- `jenkins/init/03-approval.groovy`: Approves pending scripts in Jenkins for security.
+- `jenkins/init/04-seedJob.groovy`: Creates a Jenkins seed job to generate a multi-platform container image build job.
+- `jenkins/init/05-seedJob2.groovy`: Creates Jenkins Multibranch Pipeline jobs for multiple repositories.
+- `jenkins/seed.groovy`: Defines the Jenkins job DSL script for creating the multi-platform container image build job.
 
 ## GitHub Actions Workflows
 
@@ -84,7 +89,7 @@ To create the Jenkins AMI, follow these steps:
 3. Review and modify the `ami.pkr.hcl` file if needed, such as updating the AWS region, instance type, or source AMI.
 4. Run the following command to initialize Packer and download the required plugins:
 ```packer init ami.pkr.hcl```
-5. If the validation is successful, run the following command to build the AMI:
+5. If the initializationx is successful, run the following command to validate the AMI:
 ```packer validate ami.pkr.hcl```
 6. If the validation is successful, run build the AMI:
 ```packer build ami.pkr.hcl```
