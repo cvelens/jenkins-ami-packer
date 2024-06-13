@@ -2,12 +2,14 @@
 
 # Install Node and Commitlint
 sudo apt update -y
+sudo curl -sL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt install nodejs npm -y
 sudo npm install -g @commitlint/{cli,config-conventional}
+sudo npm install -g semantic-release @semantic-release/changelog @semantic-release/git @semantic-release/github release-it github-release
 
 # Update and install dependencies
 sudo apt-get update -y
-sudo apt-get install -y fontconfig openjdk-17-jre wget unzip gnupg2 nginx software-properties-common
+sudo apt-get install -y fontconfig openjdk-17-jre wget zip unzip gnupg2 nginx software-properties-common
 
 # Install jenkins
 sudo wget -O /usr/share/keyrings/jenkins-keyring.asc \

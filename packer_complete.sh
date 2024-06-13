@@ -47,6 +47,11 @@ curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
 sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main" -y
 sudo apt-get update && sudo apt-get install packer
 
+# Installing Helm
+sudo wget https://get.helm.sh/helm-v3.15.2-linux-amd64.tar.gz
+sudo tar -zxvf helm-v3.15.2-linux-amd64.tar.gz
+sudo mv linux-amd64/helm /usr/local/bin/helm
+
 # Install Terraform
 sudo wget https://releases.hashicorp.com/terraform/1.8.5/terraform_1.8.5_linux_amd64.zip
 sudo unzip terraform_1.8.5_linux_amd64.zip -d /usr/local/bin
