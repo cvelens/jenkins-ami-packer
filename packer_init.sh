@@ -4,6 +4,7 @@
 sudo apt update -y
 sudo curl -sL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt install nodejs npm -y
+sudo npm install -g npm
 sudo npm install -g @commitlint/{cli,config-conventional}
 sudo npm install -g semantic-release @semantic-release/changelog @semantic-release/git @semantic-release/github release-it github-release
 
