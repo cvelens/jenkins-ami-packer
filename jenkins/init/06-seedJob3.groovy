@@ -13,6 +13,7 @@ def repositories = [
     [owner: 'cyse7125-su24-team15', name: 'webapp-cve-processor'],
     [owner: 'cyse7125-su24-team15', name: 'database-migration'],
     [owner: 'cyse7125-su24-team15', name: 'helm-webapp-cve-processor'],
+    [owner: 'cyse7125-su24-team15', name: 'webapp-cve-consumer'],
 ]
 
 def githubCredentialsId = 'github'
