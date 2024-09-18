@@ -73,12 +73,13 @@ The following configuration files are used for setting up the Jenkins jobs:
 - `jenkins/init/05-seedJob2.groovy`: Creates Jenkins Multibranch Pipeline jobs for multiple repositories.
 - `jenkins/seed.groovy`: Defines the Jenkins job DSL script for creating the multi-platform container image build job.
 
-## GitHub Actions Workflows
+## CI/CD Pipeline
+This repository follows a CI/CD process that uses GitHub Actions to trigger automated workflows. The CI/CD process uses Packer to create a custom AMI for Jenkins and Jenkins pipelines to do various tasks, such as creating Docker images and publishing them to DockerHub, creating Helm charts, and deploying applications to Kubernetes clusters, among others.
 
-The repository includes two GitHub Actions workflows:
-
-1. `merge.yml`: Triggered when changes are pushed to the main branch. It builds the AMI using the Packer build command and pushes the latest AMI to AWS.
-2. `pull.yml`: Triggered when a pull request is created against the main branch. It validates the Packer configuration.
+This workflow:
+1. Sets up the environment with Packer and required dependencies.
+2. Validates the Packer template.
+3. Creates a custom AMI containing Jenkins pipelines using Groovy scripts, nginx for reverse proxy, and Certbot for SSL certificates.
 
 ## Usage
 
@@ -94,11 +95,3 @@ To create the Jenkins AMI, follow these steps:
 6. If the validation is successful, run build the AMI:
 ```packer build ami.pkr.hcl```
 7. Packer will launch an EC2 instance, perform the necessary configurations, create the AMI, and share it with the specified AWS account IDs.
-
-## CI/CD Pipeline
-This repository follows a CI/CD process that uses GitHub Actions to trigger automated workflows. The CI/CD process uses Packer to create a custom AMI for Jenkins and Jenkins pipelines to do various tasks, such as creating Docker images and publishing them to DockerHub, creating Helm charts, and deploying applications to Kubernetes clusters, among others.
-
-This workflow:
-1. Sets up the environment with Packer and required dependencies.
-2. Validates the Packer template.
-3. Creates a custom AMI containing Jenkins pipelines using Groovy scripts, nginx for reverse proxy, and Certbot for SSL certificates.
