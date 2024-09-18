@@ -95,14 +95,10 @@ To create the Jenkins AMI, follow these steps:
 ```packer build ami.pkr.hcl```
 7. Packer will launch an EC2 instance, perform the necessary configurations, create the AMI, and share it with the specified AWS account IDs.
 
-## Contributing
+## CI/CD Pipeline
+This repository follows a CI/CD process that uses GitHub Actions to trigger automated workflows. The CI/CD process uses Packer to create a custom AMI for Jenkins and Jenkins pipelines to do various tasks, such as creating Docker images and publishing them to DockerHub, creating Helm charts, and deploying applications to Kubernetes clusters, among others.
 
-Please follow the standard GitHub workflow:
-
-1. Fork the repository.
-2. Create a new branch for your feature or bug fix.
-3. Make your changes and commit them with descriptive messages.
-4. Push your changes to your forked repository.
-5. Submit a pull request to the main repository.
-
-Please ensure that your code follows the existing style and conventions used in the project.
+This workflow:
+1. Sets up the environment with Packer and required dependencies.
+2. Validates the Packer template.
+3. Creates a custom AMI containing Jenkins pipelines using Groovy scripts, nginx for reverse proxy, and Certbot for SSL certificates.
